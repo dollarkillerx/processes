@@ -32,13 +32,6 @@ func Command(exe string, args ...string) (*Process, error) {
 	}
 }
 
-func (p *Process) GetPid() (int, error) {
-	if p.Cmd != nil {
-		return 0, fmt.Errorf("not")
-	}
-	return p.Cmd.Process.Pid, nil
-}
-
 func ProcessSnapshot() (map[string]string, error) {
 	if runtime.GOOS == "windows" {
 		return processSnapshotWindows()
