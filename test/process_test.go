@@ -1,6 +1,7 @@
-package processes
+package main
 
 import (
+	"github.com/dollarkillerx/processes"
 	"log"
 	"strings"
 	"testing"
@@ -8,7 +9,7 @@ import (
 
 func TestStrSp(t *testing.T) {
 	a := `ps -ef |awk '{print $2,$8}'`
-	command, err := RunCommand(a)
+	command, err := processes.RunCommand(a)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -17,7 +18,7 @@ func TestStrSp(t *testing.T) {
 }
 
 func TestSnapProcess(t *testing.T) {
-	snapshot, err := ProcessSnapshot()
+	snapshot, err := processes.ProcessSnapshot()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -27,7 +28,7 @@ func TestSnapProcess(t *testing.T) {
 }
 
 func TestP1(t *testing.T) {
-	linux, err := GetPid("rcu_gp")
+	linux, err := processes.GetPid("rcu_gp")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -35,11 +36,11 @@ func TestP1(t *testing.T) {
 }
 
 func TestKill(t *testing.T) {
-	pid, err := GetPid("plumber")
+	pid, err := processes.GetPid("plumber")
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if err := KillByPid(pid); err != nil {
+	if err := processes.KillByPid(pid); err != nil {
 		log.Fatalln(err)
 	}
 

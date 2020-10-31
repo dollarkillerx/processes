@@ -106,6 +106,7 @@ func processSnapshotWindows() (map[string]string, error) {
 	split := strings.Split(command, "\n")
 	for _, v := range split {
 		sp2 := strings.Split(v, " ")
+		sp2 = clearNone(sp2)
 		if len(sp2) >= 2 {
 			rp[sp2[1]] = sp2[0]
 		}
@@ -136,4 +137,14 @@ func runInLinux(cmd string) (string, error) {
 		return "", err
 	}
 	return strings.TrimSpace(string(result)), err
+}
+
+func clearNone(sp []string) []string {
+	var result []string
+	for _,v := range sp {
+		if v != "" {
+			result = append(result, v)
+		}
+	}
+	return result
 }
