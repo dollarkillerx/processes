@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/dollarkillerx/processes"
 	"log"
 	"strings"
@@ -43,5 +44,23 @@ func TestKill(t *testing.T) {
 	if err := processes.KillByPid(pid); err != nil {
 		log.Fatalln(err)
 	}
+}
 
+func TestExec(t *testing.T) {
+	cmd := processes.NewExecLinux()
+	exec, err := cmd.Exec("pwd")
+	if err != nil {
+		return
+	}
+
+	fmt.Println(exec)
+
+	cmd.Exec("cd ../../")
+
+	exec, err = cmd.Exec("pwd")
+	if err != nil {
+		return
+	}
+
+	fmt.Println(exec)
 }
