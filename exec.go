@@ -53,6 +53,9 @@ func (e *ExecLinux) Exec(cmd string) (string, error) {
 	command.Dir = e.Path
 	output, err := command.CombinedOutput()
 	if err != nil {
+		if len(output) != 0 {
+			err = fmt.Errorf("%s err: %s", output, err.Error())
+		}
 		return "", err
 	}
 
