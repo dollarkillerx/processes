@@ -1,3 +1,3 @@
 module github.com/dollarkillerx/processes
 
-go 1.14
+go 1.17
