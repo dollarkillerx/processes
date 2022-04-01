@@ -1,6 +1,7 @@
 package processes
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -8,18 +9,20 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type ExecLinux struct {
-	Path string
-	bash string
+	Path    string
+	bash    string
+	timeout time.Duration
 }
 
 func NewExecLinux() *ExecLinux {
-	return NewExecLinuxGen("", "")
+	return NewExecLinuxGen("", "", time.Second*60)
 }
 
-func NewExecLinuxGen(path string, bash string) *ExecLinux {
+func NewExecLinuxGen(path string, bash string, timeout time.Duration) *ExecLinux {
 	path = strings.TrimSpace(path)
 	bash = strings.TrimSpace(bash)
 	if path == "" {
@@ -34,8 +37,9 @@ func NewExecLinuxGen(path string, bash string) *ExecLinux {
 	}
 
 	return &ExecLinux{
-		Path: path,
-		bash: bash,
+		Path:    path,
+		bash:    bash,
+		timeout: timeout,
 	}
 }
 
@@ -49,7 +53,10 @@ func (e *ExecLinux) Exec(cmd string) (string, error) {
 		return "", nil
 	}
 
-	command := exec.Command("/bin/sh", "-c", cmd)
+	ctxt, cancel := context.WithTimeout(context.Background(), e.timeout)
+	defer cancel()
+
+	command := exec.CommandContext(ctxt, "/bin/sh", "-c", cmd)
 	command.Dir = e.Path
 	output, err := command.CombinedOutput()
 	if err != nil {
@@ -71,7 +78,11 @@ func (e *ExecLinux) execCd(cmd string) bool {
 		e.Path = path.Join(e.Path)
 		return false
 	}
-	command := exec.Command(e.bash, "-c", fmt.Sprintf("%s && pwd", cmd))
+
+	ctxt, cancel := context.WithTimeout(context.Background(), e.timeout)
+	defer cancel()
+
+	command := exec.CommandContext(ctxt, e.bash, "-c", fmt.Sprintf("%s && pwd", cmd))
 	command.Dir = e.Path
 	path, err := command.CombinedOutput()
 	if err != nil {
