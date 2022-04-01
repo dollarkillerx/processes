@@ -63,6 +63,9 @@ func (e *ExecLinux) Exec(cmd string) (string, error) {
 		if len(output) != 0 {
 			err = fmt.Errorf("%s err: %s", output, err.Error())
 		}
+		if err.Error() == "signal: killed" {
+			err = fmt.Errorf("%s or timeout", err.Error())
+		}
 		return "", err
 	}
 
