@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/dollarkillerx/processes"
 	"log"
+	"os/exec"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestStrSp(t *testing.T) {
@@ -63,4 +66,27 @@ func TestExec(t *testing.T) {
 	}
 
 	fmt.Println(exec)
+}
+
+func TestExec2(t *testing.T) {
+	cmd := processes.NewExecLinuxGen("", "bash", time.Second)
+	exec, err := cmd.Exec("sleep 3")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	fmt.Println(exec)
+}
+
+func TestExec3(t *testing.T) {
+	ctxt, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+
+	command := exec.CommandContext(ctxt, "bash", "-c", "sleep 3")
+	path, err := command.CombinedOutput()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(path)
 }

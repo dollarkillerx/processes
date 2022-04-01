@@ -56,7 +56,7 @@ func (e *ExecLinux) Exec(cmd string) (string, error) {
 	ctxt, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 
-	command := exec.CommandContext(ctxt, "/bin/sh", "-c", cmd)
+	command := exec.CommandContext(ctxt, e.bash, "-c", cmd)
 	command.Dir = e.Path
 	output, err := command.CombinedOutput()
 	if err != nil {
