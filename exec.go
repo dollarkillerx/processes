@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -53,24 +54,74 @@ func (e *ExecLinux) Exec(cmd string) (string, error) {
 		return "", nil
 	}
 
-	ctxt, cancel := context.WithTimeout(context.Background(), e.timeout)
-	defer cancel()
-
-	command := exec.CommandContext(ctxt, e.bash, "-c", cmd)
+	command := exec.Command(e.bash, "-c", cmd)
 	command.Dir = e.Path
-	output, err := command.CombinedOutput()
-	if err != nil {
-		if len(output) != 0 {
-			err = fmt.Errorf("%s err: %s", output, err.Error())
+
+	var cmdErr error
+	var output []byte
+	overChan := make(chan struct{})
+
+	go func() {
+		output, cmdErr = command.CombinedOutput()
+		close(overChan)
+	}()
+
+	select {
+	case <-time.After(e.timeout):
+		err := command.Process.Kill()
+		if err != nil {
+			log.Println(err)
 		}
-		if err.Error() == "signal: killed" {
-			err = fmt.Errorf("%s or timeout", err.Error())
-		}
-		return "", err
+		fmt.Println("timeout")
+		cmdErr = errors.New("timeout")
+		break
+	case <-overChan:
+		break
 	}
 
-	return strings.TrimSpace(string(output)), err
+	if cmdErr != nil {
+		if len(output) != 0 {
+			cmdErr = fmt.Errorf("%s err: %s", output, cmdErr.Error())
+		}
+		if cmdErr.Error() == "signal: killed" {
+			cmdErr = fmt.Errorf("%s or timeout", cmdErr.Error())
+		}
+		return "", cmdErr
+	}
+
+	return strings.TrimSpace(string(output)), cmdErr
 }
+
+//func (e *ExecLinux) Exec(cmd string) (string, error) {
+//	cmd = strings.TrimSpace(cmd)
+//	if cmd == "" {
+//		return "", errors.New("cmd is null")
+//	}
+//	ok := e.execCd(cmd)
+//	if ok {
+//		return "", nil
+//	}
+//
+//	ctxt, cancel := context.WithTimeout(context.Background(), time.Second)
+//	defer cancel()
+//
+//	//command := exec.CommandContext(ctxt, e.bash, "-c", cmd)
+//	fmt.Println("time sec")
+//	command := exec.CommandContext(ctxt, "bash", "-c", cmd)
+//	command.Dir = e.Path
+//	output, err := command.CombinedOutput()
+//	if err != nil {
+//		if len(output) != 0 {
+//			err = fmt.Errorf("%s err: %s", output, err.Error())
+//		}
+//		if err.Error() == "signal: killed" {
+//			err = fmt.Errorf("%s or timeout", err.Error())
+//		}
+//		return "", err
+//	}
+//
+//	return strings.TrimSpace(string(output)), err
+//}
 
 func (e *ExecLinux) execCd(cmd string) bool {
 	split := strings.Split(cmd, " ")
